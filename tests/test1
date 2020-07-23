@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly tmp_file="$(mktemp test-shamir-test-XXXX)"
+trap 'rm -rf "${tmp_file}"' EXIT
+
+readonly secret='$=#,ZDbo73IA+Eu=q].Jjl0ChXRp]QsE'
+
+echo -n "${secret}" | spass -p 5 -t 3 split >"${tmp_file}"
+
+test "$(tail -n3 <"${tmp_file}" | spass combine)" == "${secret}"
+test "$(head -n3 <"${tmp_file}" | spass combine)" == "${secret}"
+test "$(head -n2 <"${tmp_file}" | spass combine)" != "${secret}"
+test "$(tail -n2 <"${tmp_file}" | spass combine)" != "${secret}"
+
+echo -n "${secret}" | spass -p 6 -t 4 split >"${tmp_file}"
+
+test "$(tail -n4 <"${tmp_file}" | spass combine)" == "${secret}"
+test "$(tail -n3 <"${tmp_file}" | spass combine)" != "${secret}"
+
+echo "pass"
+
